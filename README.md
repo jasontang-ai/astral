@@ -1,32 +1,5 @@
 # ASTRAL
 
-ASTRAL is a biosecurity behavioral evaluation framework: it generates simulated
-malicious and benign actor-model conversations from grounded actor cards, then
-measures compliance (SecureBio BioTIER refuse/permit extended to multi-turn),
-refusal decay, uplift, and detection.
-
-**This is a reviewer-facing public copy.** The following are intentionally
-excluded because they are restricted from public distribution or are
-evaluation-private:
-
-- the dataset (`data/`, `_runs/`) — simulated biothreat conversations
-- the grounding assets (`src/astral/assets/grounding/`) — BioTIER routing,
-  biological-agent, and related registries that carry threat-relevant content
-
-The framework code — generation (`cards`, `bridge`), evaluation (`qa`,
-`scanner`), and the benchmark protocol — is included so reviewers can read how
-it works. The code references the gated grounding and will not run end-to-end
-without it; access to the dataset and grounding is available on request to
-organizations with a track record in AI-safety research.
-
-See `docs/architecture.md` and `docs/benchmark.md` for the design.
-
-
-
----
-
-# ASTRAL
-
 [![CI](https://github.com/ethan-tam33/astral/actions/workflows/ci.yml/badge.svg?branch=jasontang%2Fprs%2Flab)](https://github.com/ethan-tam33/astral/actions/workflows/ci.yml)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
