@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: ASTRAL
+abstract: >-
+  A deterministic toolkit for building matched actor-card pairs and
+  transcripts from BioTIER ground truth, for AI safety research in biology.
+type: software
+version: 0.7.0
+date-released: 2026-07-24
+license: MIT
+repository-code: https://github.com/ethan-tam33/astral
+authors:
+  - name: ASTRAL contributors

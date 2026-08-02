@@ -1,0 +1,100 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "astral"
+version = "0.7.0"
+description = "Deterministic actor-card pairs from BioTIER ground truth"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = []
+dependencies = [
+  "pydantic>=2.7",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "mypy>=1.11",
+  "petri-bloom>=0.1",
+  "pytest>=8.0",
+  "pytest-cov>=7.0",
+  "pytest-xdist>=3.0",
+  "radon>=6.0",
+  "ty",
+  "ruff>=0.6",
+  "types-PyYAML>=6.0",
+]
+
+bloom = [
+  "petri-bloom>=0.1",
+]
+
+[project.scripts]
+astral = "astral._cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/astral"]
+
+[tool.hatch.build]
+include = [
+  "src/astral/**/*.py",
+  "src/astral/assets/**/*",
+  "src/astral/py.typed",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["src", "tests"]
+addopts = "-q --doctest-modules -p no:fast_array_utils -n auto -m 'not live'"
+markers = [
+    "live: tests that call live model APIs (deselected by default)",
+]
+
+[tool.coverage.run]
+source = ["src/astral"]
+omit = ["src/astral/bridge/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "D", "N", "S", "ERA", "T20", "C90", "TID", "PT", "PLR0915", "PLR0912", "PLR0913", "PLC0415"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "S101", "PLC0415"]
+"scripts/metrics_report.py" = ["T201"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pylint]
+max-args = 8
+max-branches = 12
+max-locals = 15
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["astral"]
+
+[[tool.mypy.overrides]]
+module = "dspy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["petri_bloom.*", "inspect_petri.*", "inspect_ai.*", "numpy.*", "radon.*"]
+follow_imports = "skip"

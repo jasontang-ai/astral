@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-glob: uv.lock
+      - run: uv venv --clear && uv pip install -e '.[dev]'
+      - run: uv run ruff format --check src tests
+      - run: uv run ruff check src tests
+      - run: uv run mypy src
+      - name: ty (advisory)
+        continue-on-error: true
+        run: uv run ty check --python .venv/bin/python src
+      - run: uv run pytest
+      - run: uv run pytest --cov --cov-fail-under=90
+      - run: uv run python -m astral.metrics --check
+      - run: uv build
+      - name: Verify installed wheel
+        run: |
+          uv venv /tmp/astral-wheel
+          uv pip install --python /tmp/astral-wheel/bin/python dist/*.whl
+          /tmp/astral-wheel/bin/python - <<'PY'
+          from pathlib import Path
+          import astral
+          assert (Path(astral.__file__).parent / "py.typed").is_file()
+          pair = astral.make_actor_cards(
+              route_id="ca.immune_escape.01",
+              variables=astral.VariableAssignment(
+                  scientific_capability=3, jailbreak=1, kill_chain=1, intended_scope=1
+              ),
+              seed=7,
+          )
+          assert pair.benign.source_hash != pair.malicious.source_hash
+          PY

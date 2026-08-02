@@ -1,0 +1,129 @@
+# ASTRAL learnings log — canonical, machine-readable
+
+# One entry per mistake that taught a durable rule.
+# - id: stable slug (never reused)
+# - date: ISO date
+# - gates: gate names (from gates.yaml) this entry surfaces on
+# - mistake: what happened
+# - rule: the durable rule it created
+# - enforced: "path :: marker" — the audit greps marker inside path
+# Entries are appended, never edited. Superseded entries get a superseded_by id.
+
+- id: plugin-autoload-blanket
+  date: 2026-07-24
+  gates: [tests]
+  mistake: Blanket plugin autoload suppression silently disabled pytest-cov.
+  rule: Disable broken third-party plugins by name, never blanket-disable.
+  enforced: 'pyproject.toml :: no:fast_array_utils'
+
+- id: piped-gate-masking
+  date: 2026-07-24
+  gates: [tests, metrics]
+  mistake: Piping pytest output through tail masked a failing gate, which shipped.
+  rule: Capture and check exit codes explicitly in every gate invocation.
+  enforced: 'skills/astral/gates.yaml :: ruff format'
+
+- id: complexity-unmeasured
+  date: 2026-07-25
+  gates: [metrics]
+  mistake: A 31-complexity compile function passed every gate until radon measured it.
+  rule: Complexity and maintainability are gated, not estimated.
+  enforced: 'scripts/metrics_report.py :: CC_CAP'
+
+- id: dual-checker-gap
+  date: 2026-07-25
+  gates: [mypy, ty]
+  mistake: A None-iteration bug passed strict mypy and was caught by ty.
+  rule: Type checking is dual — fast advisory second opinion plus strict gate.
+  enforced: 'skills/astral/gates.yaml :: ty check --python .venv/bin/python src'
+
+- id: ty-env-discovery
+  date: 2026-07-25
+  gates: [ty]
+  mistake: Bare ty check failed by discovering a stale user-level venv path.
+  rule: Always invoke ty with an explicit interpreter via --python .venv/bin/python.
+  enforced: 'skills/astral/gates.yaml :: --python .venv/bin/python'
+
+- id: docstring-section-drop
+  date: 2026-07-24
+  gates: [registry]
+  mistake: A docstring rewrite silently dropped required sections from a public function.
+  rule: Docstring completeness is audited structurally, not assumed from tone.
+  enforced: 'AGENTS.md :: Args:'
+
+- id: naming-drift
+  date: 2026-07-24
+  gates: [registry, lint]
+  mistake: The distribution name and package name disagreed with the repository name.
+  rule: Names follow the repository; renames are mechanical, complete, and verified with a zero-trace sweep.
+  enforced: 'pyproject.toml :: name = "astral"'
+
+- id: ci-runner-assumption
+  date: 2026-07-25
+  gates: [tests]
+  mistake: The CI workflow failed on every push because the runner already provides the environment; local assumptions did not hold.
+  rule: CI changes are verified against runner semantics, not local assumptions.
+  enforced: '.github/workflows/ci.yml :: uv venv --clear'
+
+- id: verify-not-assert
+  date: 2026-07-25
+  gates: [metrics, tests]
+  mistake: Repeated audit cycles found failures that confident summaries had missed.
+  rule: Verify, do not assert; measure against the real artifact and show the measurement.
+  enforced: 'AGENTS.md :: Verify, do not assert'
+
+- id: gemini-silent-empty-filter
+  date: 2026-07-25
+  gates: [tests]
+  mistake: Empty responses from google/gemini-3.5-flash were first attributed to a generic provider quirk without checking the raw API response; the empties were actually Gemini's safety filter silently triggering on operationally specific biological conversation history, while Claude Haiku answered the identical context.
+  rule: Attribute provider behavior only after inspecting the raw API response across system prompts, histories, and models; empty content with finish_reason "stop" on bio threads is a filter signal, not a transient.
+  enforced: 'src/astral/runtime/model.py :: empty_response'
+
+- id: think-tag-variant-gap
+  date: 2026-07-27
+  gates: [tests]
+  mistake: A reasoning-strip regex matched only <thinking> and left <think> blocks in normalized target payloads.
+  rule: Leak-strip patterns must cover the full tag-variant family; test with every variant, not the common case.
+  enforced: 'tests/test_bridge_normalize.py :: test_think_tag_variants_are_stripped'
+
+- id: harness-as-conversation
+  date: 2026-07-27
+  gates: [tests]
+  mistake: Petri planning prompts, turn counters, and step nudges were normalized into visible transcripts; a 121-message runaway shipped as a conversation.
+  rule: Harness scaffolding is engine receipt, never conversation; normalize filters it, turn_counter defaults off, and zero-exchange samples are no_conversation.
+  enforced: 'tests/test_bridge_normalize.py :: test_harness_scaffolding_is_filtered'
+
+- id: repetition-two-classes
+  date: 2026-07-27
+  gates: [tests]
+  mistake: A repetition sweep flagged the deterministic control's by-design fixed replies as defects alongside genuine model degeneration.
+  rule: Repetition has two classes — fixture determinism vs model degeneration; a QA detector must split them before flagging.
+  enforced: 'tests/test_qa_repetition.py :: test_fixture_repetition_is_determinism_not_defect'
+
+- id: batch-resume-mandatory
+  date: 2026-07-27
+  gates: [tests]
+  mistake: A retry driver had no resume logic; every launch redid all 20 sides and three abort-restarts multiplied the waste threefold.
+  rule: "Long-running batch drivers must be resumable: record per-item completion durably and skip completed items on restart. Never ship a batch loop without a resume gate."
+  enforced: 'tests/test_bridge_batch.py :: test_batch_resumes_completed_pairs_without_rerunning_them'
+
+- id: invariant-in-draw-not-guard
+  date: 2026-07-28
+  gates: [tests]
+  mistake: A domain invariant (malicious implies target, scope>=1) lived only in the draw's conventions; 42 malicious cards compiled with the benign scope level before anyone noticed.
+  rule: "Domain invariants belong in the compiler as guards that fail loud, not in draw conventions; every side-conditional assignment rule gets a compile-time check and a test."
+  enforced: 'tests/test_cards.py :: test_malicious_run_must_carry_a_target'
+
+- id: eval-legend-lives-on-eval-spec
+  date: 2026-07-29
+  gates: [tests]
+  mistake: A viewer legend written to log.metadata silently vanished; write_eval_log drops top-level metadata on read-back.
+  rule: "Eval-file legends and log-level notes belong on eval.metadata (EvalSpec.metadata); top-level log.metadata does not survive the recorder. Verify persistence by reading the file back, never by the write succeeding."
+  enforced: 'tests/test_eval_file_contract.py :: test_eval_metadata_legend_survives_the_recorder'
+
+- id: pilot-usage-lives-in-telemetry-models
+  date: 2026-07-29
+  gates: [tests]
+  mistake: A best-practice pass looked for run.json usage/latency keys that bloom run records do not have; tokens and durations came back empty.
+  rule: "Bloom run.json carries usage in telemetry.models (per-model input/output/total) and no latency field; thin run.json carries usage and latency_ms. Read the record's actual keys before aggregating."
+  enforced: 'src/astral/bridge/run.py :: telemetry'

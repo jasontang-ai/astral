@@ -1,0 +1,49 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+dist/
+build/
+.env
+.env.*
+.DS_Store
+astral_demo/
+astral_output/
+
+# Local research governance (specs, maps, run records, progress notes)
+# stays out of the repo. The progress README is tracked so the format is shared.
+docs/specs/
+docs/research/
+docs/progress/
+
+# Metrics reports are build artifacts, kept out of git.
+data/metrics/
+.coverage
+.coverage*
+
+# Run artifacts are local working files, never committed.
+# Landmark evidence is promoted deliberately into tracked locations.
+_runs/
+
+# Local author canonicalization; do not publish.
+.mailmap
+
+# OptMem project working memory; local only.
+.agent-memory/
+docs/evidence/archive/
+
+# Track promoted cycle logs; _runs stays gitignored
+!data/cycles/
+
+# Intermediate / non-primary cycle packs
+data/cycles/archive/
+# Working folders kept out of the repo (local artifacts).
+docs/diagrams/
+docs/evidence/
+!docs/evidence/README.md
+# Unvalidated benchmark claims (kept local until independently validated).
+data/cycles/dataset/compliance_leaderboard.json
+data/cycles/dataset/refusal_erosion_finding.json

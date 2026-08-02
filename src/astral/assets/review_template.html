@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASTRAL Cycle 1 Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #657187;
+      --line: #dbe2ec;
+      --soft: #f4f7fb;
+      --panel: #ffffff;
+      --blue: #2f67d8;
+      --blue-soft: #eaf1ff;
+      --green: #167a55;
+      --green-soft: #e6f6ef;
+      --red: #a33a46;
+      --red-soft: #fdecef;
+      --amber: #8a5b09;
+      --amber-soft: #fff3d7;
+      --shadow: 0 2px 12px rgba(24, 33, 47, .07);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--soft);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, select { font: inherit; }
+
+    .topbar {
+      height: 72px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(360px, 2fr) auto;
+      align-items: center;
+      gap: 18px;
+      padding: 10px 18px;
+      background: #172033;
+      color: white;
+      box-shadow: var(--shadow);
+    }
+    .brand strong { display: block; font-size: 17px; letter-spacing: .01em; }
+    .brand span { color: #b8c4d8; font-size: 12px; }
+    .picker { min-width: 0; }
+    .picker label { display: block; margin-bottom: 3px; color: #b8c4d8; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    .picker select {
+      width: 100%;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #46536b;
+      border-radius: 7px;
+      color: white;
+      background: #222e45;
+    }
+    .nav { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .nav button, .copy-button {
+      border: 1px solid #46536b;
+      border-radius: 7px;
+      padding: 7px 11px;
+      color: white;
+      background: #222e45;
+      cursor: pointer;
+    }
+    .nav button:hover { background: #30405e; }
+    .nav button:disabled { opacity: .35; cursor: default; }
+    #position { min-width: 48px; text-align: center; color: #c7d1e3; }
+
+    .workspace {
+      height: calc(100vh - 72px);
+      display: grid;
+      grid-template-columns: minmax(480px, 58%) minmax(390px, 42%);
+      gap: 1px;
+      background: var(--line);
+    }
+    .conversation, .reference { min-width: 0; min-height: 0; background: var(--panel); }
+    .conversation { display: grid; grid-template-rows: auto 1fr; }
+    .reference { display: grid; grid-template-rows: minmax(300px, 56%) minmax(220px, 44%); }
+
+    .pane-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+    .pane-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .pane-header h2 { margin: 0; font-size: 16px; }
+    .subtitle { margin-top: 4px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+    .scroll { min-height: 0; overflow: auto; }
+
+    #chat { padding: 20px clamp(18px, 3vw, 44px) 44px; scroll-behavior: smooth; }
+    .message { display: grid; margin: 0 0 18px; }
+    .message.user { justify-items: end; }
+    .message.assistant, .message.system, .message.tool { justify-items: start; }
+    .message-label { margin: 0 7px 5px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .bubble {
+      max-width: min(780px, 88%);
+      padding: 12px 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      box-shadow: 0 1px 3px rgba(24, 33, 47, .04);
+    }
+    .user .bubble { border-color: #b9ccf5; border-bottom-right-radius: 4px; background: var(--blue-soft); }
+    .assistant .bubble { border-bottom-left-radius: 4px; background: #fff; }
+    .system .bubble, .tool .bubble { background: var(--soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+    .prompt-section, .metadata-section { min-height: 0; display: grid; grid-template-rows: auto 1fr; background: #fbfcfe; }
+    .prompt-section { border-bottom: 1px solid var(--line); }
+    .prompt-actions { margin-left: auto; }
+    .copy-button { padding: 5px 9px; border-color: #c2ccdb; color: var(--ink); background: white; font-size: 12px; }
+    .copy-button:hover { background: var(--soft); }
+    #prompt {
+      margin: 0;
+      padding: 17px 18px 26px;
+      color: #263247;
+      background: #fffdf7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    #metadata { padding: 15px 18px 30px; }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #3d4a60;
+      background: #edf1f7;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.benign { color: var(--green); background: var(--green-soft); }
+    .badge.malicious { color: var(--red); background: var(--red-soft); }
+    .badge.pass { color: var(--green); background: var(--green-soft); }
+    .badge.warn { color: var(--amber); background: var(--amber-soft); }
+
+    .section { margin-bottom: 17px; }
+    .section h3 {
+      margin: 0 0 8px;
+      color: #43516a;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+    .facts {
+      display: grid;
+      grid-template-columns: minmax(100px, 34%) 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+    .facts > div { padding: 8px 10px; border-bottom: 1px solid #e8edf4; overflow-wrap: anywhere; }
+    .facts > div:nth-last-child(-n+2) { border-bottom: 0; }
+    .fact-label { color: var(--muted); background: #f8fafc; font-size: 12px; font-weight: 650; }
+    .score-grid { display: grid; grid-template-columns: repeat(3, minmax(80px, 1fr)); gap: 7px; }
+    .score-card { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+    .score-card span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+    .score-card strong { display: block; margin-top: 2px; font-size: 16px; }
+    details { margin-bottom: 7px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+    summary { padding: 9px 11px; cursor: pointer; font-weight: 650; }
+    .detail-body { padding: 0 11px 12px; }
+    .detail-body p { margin: 8px 0 0; }
+    .detail-body .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .json { margin: 0; padding: 12px; max-height: 380px; overflow: auto; color: #34415a; background: #f7f9fc; white-space: pre-wrap; font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .empty { color: var(--muted); font-style: italic; }
+    .loading { display: grid; place-items: center; height: 100%; color: var(--muted); }
+
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      .topbar { height: auto; grid-template-columns: 1fr; }
+      .workspace { height: auto; grid-template-columns: 1fr; }
+      .conversation { height: 72vh; }
+      .reference { height: 90vh; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>ASTRALBench Review</strong>
+      <span>__REVIEW_SUBTITLE__</span>
+    </div>
+    <div class="picker">
+      <label for="sampleSelect">Sample</label>
+      <select id="sampleSelect" aria-label="Select sample"></select>
+    </div>
+    <div class="nav">
+      <button id="previous" title="Previous sample (←)">← Prev</button>
+      <span id="position">—</span>
+      <button id="next" title="Next sample (→)">Next →</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="conversation">
+      <div class="pane-header">
+        <div class="pane-title-row">
+          <h2>Conversation</h2>
+          <div id="chatBadges" class="badges"></div>
+        </div>
+        <div id="chatSubtitle" class="subtitle"></div>
+      </div>
+      <div id="chat" class="scroll"><div class="loading">Loading evaluation…</div></div>
+    </section>
+
+    <aside class="reference">
+      <section class="prompt-section">
+        <div class="pane-header">
+          <div class="pane-title-row">
+            <h2>Assigned user_prompt</h2>
+            <div class="prompt-actions"><button id="copyPrompt" class="copy-button">Copy prompt</button></div>
+          </div>
+          <div class="subtitle">Kept visible while reviewing the transcript</div>
+        </div>
+        <pre id="prompt" class="scroll">Loading…</pre>
+      </section>
+
+      <section class="metadata-section">
+        <div class="pane-header">
+          <div class="pane-title-row"><h2>Metadata &amp; judge results</h2></div>
+        </div>
+        <div id="metadata" class="scroll"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script id="evaluation-data" type="application/json">
+__REVIEW_DATA__
+  </script>
+
+  <script>
+    const state = { samples: [], index: 0 };
+    const $ = (id) => document.getElementById(id);
+
+    function text(value, fallback = "—") {
+      if (value === null || value === undefined || value === "") return fallback;
+      if (Array.isArray(value)) return value.join(", ");
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    }
+
+    function contentText(content) {
+      if (typeof content === "string") return content;
+      if (!Array.isArray(content)) return text(content, "");
+      return content.map(block => {
+        if (block.type === "text") return block.text || "";
+        if (block.type === "thinking") return `[Thinking]\n${block.thinking || ""}`;
+        if (block.type === "toolCall") return `[Tool call: ${block.name}]\n${JSON.stringify(block.arguments || {}, null, 2)}`;
+        if (block.type === "image") return `[Image: ${block.mime_type || block.mimeType || "embedded"}]`;
+        return JSON.stringify(block, null, 2);
+      }).join("\n\n");
+    }
+
+    function node(tag, className, content) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (content !== undefined) el.textContent = content;
+      return el;
+    }
+
+    function badge(value, className = "") {
+      return node("span", `badge ${className}`, value);
+    }
+
+    function addFact(container, label, value) {
+      container.append(node("div", "fact-label", label), node("div", "", text(value)));
+    }
+
+    function renderChat(sample) {
+      const chat = $("chat");
+      chat.replaceChildren();
+      let userTurn = 0;
+      (sample.messages || []).forEach((message, i) => {
+        const role = message.role || "unknown";
+        if (role === "user") userTurn += 1;
+        const wrapper = node("article", `message ${role}`);
+        let label = role;
+        if (role === "user") label = `User · turn ${userTurn}`;
+        else if (role === "assistant") label = "Assistant";
+        wrapper.append(node("div", "message-label", label), node("div", "bubble", contentText(message.content)));
+        chat.append(wrapper);
+      });
+      if (!(sample.messages || []).length) chat.append(node("p", "empty", "No messages in this sample."));
+      chat.scrollTop = 0;
+    }
+
+    function renderMetadata(sample) {
+      const metadata = sample.metadata || {};
+      const card = metadata.card || {};
+      const route = card.route || {};
+      const judge = sample.scores?.Judge || Object.values(sample.scores || {})[0] || {};
+      const judgeValues = judge.value || {};
+      const judgeVariables = judge.metadata?.variables || {};
+      const root = $("metadata");
+      root.replaceChildren();
+
+      const assigned = node("section", "section");
+      assigned.append(node("h3", "", "Assigned levels"));
+      const assignedBadges = node("div", "badges");
+      const vars = card.variables || metadata.variables || {};
+      const kcStage = metadata.kill_chain_stage;
+      assignedBadges.append(
+        badge(`SC ${text(vars.scientific_capability ?? vars.sc)}`),
+        badge(`JB ${text(vars.jailbreak ?? vars.jb)}`),
+        badge(`KC ${text(vars.kill_chain ?? vars.kc)}${kcStage ? ` · ${kcStage}` : ""}`),
+        badge(`SP ${text(vars.intended_scope ?? vars.sp)}`)
+      );
+      assigned.append(assignedBadges);
+      root.append(assigned);
+
+      const overview = node("section", "section");
+      overview.append(node("h3", "", "Sample overview"));
+      const facts = node("div", "facts");
+      addFact(facts, "Route", metadata.route_id || route.id);
+      addFact(facts, "Side", metadata.side || card.side);
+      addFact(facts, "Status", metadata.status);
+      addFact(facts, "Turns", metadata.turns || sample.messages?.length);
+      addFact(facts, "Firewall", metadata.firewall?.status);
+      addFact(facts, "Jailbreak", metadata.jailbreak_method || card.jailbreak_method);
+      addFact(facts, "Biological tool", metadata.biotool || card.biotool);
+      addFact(facts, "Tools enabled", metadata.tools_enabled === false ? "no (conversation-only)" : "yes");
+      addFact(facts, "Tool calls", metadata.tool_calls ?? 0);
+      addFact(facts, "Tool results", metadata.tool_results ?? 0);
+      addFact(facts, "Agent", metadata.agent || card.agent || (metadata.agentless ? "Agentless" : null));
+      const models = metadata.models || {};
+      if (models.user || models.assistant || models.judge) {
+        addFact(facts, "User model", models.user);
+        addFact(facts, "Assistant model", models.assistant);
+        addFact(facts, "Judge model", models.judge);
+      }
+      if (models.audit_judge) {
+        addFact(facts, "Audit judge", models.audit_judge);
+      }
+      if (metadata.biotier_compliance) {
+        addFact(facts, "BioTIER compliance", metadata.biotier_compliance);
+      }
+      if (metadata.kill_chain_stage) {
+        addFact(facts, "Kill-chain stage", metadata.kill_chain_stage);
+      }
+      if (metadata.reasoning_effort) {
+        addFact(facts, "Reasoning", metadata.reasoning_effort);
+      }
+      addFact(facts, "Seed", metadata.seed || card.seed);
+      addFact(facts, "Cycle", metadata.cycle);
+      addFact(facts, "Workplace", card.workplace);
+      addFact(facts, "Objective", card.objective);
+      addFact(facts, "Theme", route.theme);
+      addFact(facts, "Category", route.category_text);
+      overview.append(facts);
+      root.append(overview);
+
+      if (Object.keys(judgeValues).length) {
+        const scoreSection = node("section", "section");
+        scoreSection.append(node("h3", "", "Judge result"));
+        const scoreGrid = node("div", "score-grid");
+        Object.entries(judgeValues).forEach(([key, value]) => {
+          const cardEl = node("div", "score-card");
+          cardEl.append(node("span", "", key), node("strong", "", text(value)));
+          scoreGrid.append(cardEl);
+        });
+        scoreSection.append(scoreGrid);
+        root.append(scoreSection);
+      }
+
+      const agreement = metadata.judge_agreement || judge.metadata?.judge_agreement;
+      if (agreement) {
+        const agSection = node("section", "section");
+        agSection.append(node("h3", "", "Audit judge agreement"));
+        const agFacts = node("div", "facts");
+        addFact(agFacts, "Outcome match", agreement.outcome_match);
+        addFact(agFacts, "Variable match rate", agreement.variable_match_rate);
+        addFact(agFacts, "Variables compared", agreement.variables_compared);
+        agSection.append(agFacts);
+        root.append(agSection);
+      }
+
+      if (Object.keys(judgeVariables).length) {
+        const detailSection = node("section", "section");
+        detailSection.append(node("h3", "", "Judge rationale by variable"));
+        Object.entries(judgeVariables).forEach(([name, detail]) => {
+          const disclosure = document.createElement("details");
+          const summary = document.createElement("summary");
+          summary.textContent = `${name.replaceAll("_", " ")} · choice ${text(detail.choice)} · confidence ${text(detail.confidence)}`;
+          const body = node("div", "detail-body");
+          if (detail.rationale) body.append(node("div", "label", "Rationale"), node("p", "", detail.rationale));
+          if (detail.counter_explanation) body.append(node("div", "label", "Counter-explanation"), node("p", "", detail.counter_explanation));
+          if (detail.evidence_turns?.length) body.append(node("div", "label", "Evidence turns"), node("p", "", detail.evidence_turns.join(", ")));
+          disclosure.append(summary, body);
+          detailSection.append(disclosure);
+        });
+        root.append(detailSection);
+      }
+
+      const fullSection = node("section", "section");
+      const full = document.createElement("details");
+      const fullSummary = document.createElement("summary");
+      fullSummary.textContent = "Full raw metadata";
+      full.append(fullSummary, node("pre", "json", JSON.stringify(metadata, null, 2)));
+      fullSection.append(full);
+      root.append(fullSection);
+      root.scrollTop = 0;
+    }
+
+    function render() {
+      const sample = state.samples[state.index];
+      if (!sample) return;
+      const metadata = sample.metadata || {};
+      const card = metadata.card || {};
+      const side = metadata.side || card.side || sample.target;
+
+      $("sampleSelect").value = String(state.index);
+      $("position").textContent = `${state.index + 1} / ${state.samples.length}`;
+      $("previous").disabled = state.index === 0;
+      $("next").disabled = state.index === state.samples.length - 1;
+      $("chatSubtitle").textContent = sample.id || "Unnamed sample";
+
+      const chatBadges = $("chatBadges");
+      chatBadges.replaceChildren();
+      chatBadges.append(badge(text(side), side === "malicious" ? "malicious" : "benign"));
+      if (metadata.firewall?.status) chatBadges.append(badge(`firewall ${metadata.firewall.status}`, metadata.firewall.status === "pass" ? "pass" : "warn"));
+
+      $("prompt").textContent = card.user_prompt || metadata.user_prompt || "No user_prompt found.";
+      renderChat(sample);
+      renderMetadata(sample);
+      location.hash = `sample=${state.index + 1}`;
+    }
+
+    function go(index) {
+      state.index = Math.max(0, Math.min(state.samples.length - 1, index));
+      render();
+    }
+
+    async function load() {
+      try {
+        const data = JSON.parse(document.getElementById("evaluation-data").textContent);
+        state.samples = data.samples || [];
+        const hashIndex = Number(new URLSearchParams(location.hash.slice(1)).get("sample")) - 1;
+        state.index = Number.isInteger(hashIndex) && hashIndex >= 0 ? Math.min(hashIndex, state.samples.length - 1) : 0;
+
+        const select = $("sampleSelect");
+        state.samples.forEach((sample, index) => {
+          const metadata = sample.metadata || {};
+          const option = document.createElement("option");
+          option.value = String(index);
+          option.textContent = `${index + 1}. ${metadata.route_id || sample.id} · ${metadata.side || sample.target || "unknown"}`;
+          select.append(option);
+        });
+        render();
+      } catch (error) {
+        $("chat").innerHTML = `<div class="loading">Could not load evaluation JSON: ${error.message}</div>`;
+        $("prompt").textContent = "Load error";
+      }
+    }
+
+    $("sampleSelect").addEventListener("change", event => go(Number(event.target.value)));
+    $("previous").addEventListener("click", () => go(state.index - 1));
+    $("next").addEventListener("click", () => go(state.index + 1));
+    $("copyPrompt").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("prompt").textContent);
+      const button = $("copyPrompt");
+      button.textContent = "Copied";
+      setTimeout(() => button.textContent = "Copy prompt", 1000);
+    });
+    window.addEventListener("keydown", event => {
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+      if (event.key === "ArrowLeft") go(state.index - 1);
+      if (event.key === "ArrowRight") go(state.index + 1);
+    });
+
+    load();
+  </script>
+</body>
+</html>

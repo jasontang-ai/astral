@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fast advisory feedback: the manifest's fast tier.
+.venv/bin/python skills/astral/scripts/check_submission.py
+STATUS=$?
+
+# Event-triggered memory: episodes are captured at the checkpoint, never
+# remembered later. Memory failures never affect the commit.
+MEMO="$HOME/.optmem/memo"
+if [ -x "$MEMO" ] && [ -d ".agent-memory" ]; then
+    HASH=$(git rev-parse --short HEAD)
+    SUBJECT=$(git log -1 --format=%s)
+    if [ "$STATUS" -eq 0 ]; then
+        MEMORY_DIR="$PWD/.agent-memory" "$MEMO" note "SHIP $HASH $SUBJECT" >/dev/null 2>&1 || true
+    else
+        MEMORY_DIR="$PWD/.agent-memory" "$MEMO" note "GATE-FAIL $HASH $SUBJECT (fast tier exit $STATUS)" >/dev/null 2>&1 || true
+    fi
+    # Fix-chain detector: two or more consecutive fix commits suggest the
+    # root cause is still open.
+    RECENT=$(git log -3 --format=%s | grep -c "^fix" || true)
+    if [ "$RECENT" -ge 2 ]; then
+        MEMORY_DIR="$PWD/.agent-memory" "$MEMO" note "FIX-CHAIN: $RECENT consecutive fix commits ending at $HASH; root cause likely still open" >/dev/null 2>&1 || true
+    fi
+fi
+exit 0

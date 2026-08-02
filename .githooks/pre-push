@@ -1,0 +1,11 @@
+#!/bin/sh
+# Blocking fast tier before push; the full suite runs in CI.
+set -e
+
+# Memory compression at the push boundary, detached so it never blocks.
+MEMO="$HOME/.optmem/memo"
+if [ -x "$MEMO" ] && [ -d ".agent-memory" ]; then
+    (MEMORY_DIR="$PWD/.agent-memory" "$MEMO" nap >/dev/null 2>&1 &)
+fi
+
+.venv/bin/python skills/astral/scripts/check_submission.py

@@ -1,0 +1,46 @@
+# ASTRAL gate manifest — the single definition of every gate.
+# Hooks, check_submission.py, and reviews consume this file. CI mirrors it.
+
+schema: astral.gates.v1
+
+gates:
+  - name: registry
+    command: ".venv/bin/python -m pytest -q tests/test_design_registry.py tests/test_architecture.py"
+    blocking: true
+    tiers: [fast, full]
+
+  - name: format
+    command: ".venv/bin/ruff format --check src tests"
+    blocking: true
+    tiers: [fast, full]
+
+  - name: lint
+    command: ".venv/bin/ruff check src tests"
+    blocking: true
+    tiers: [fast, full]
+
+  - name: mypy
+    command: ".venv/bin/mypy src"
+    blocking: true
+    tiers: [fast, full]
+
+  - name: ty
+    # Frozen dual-checker command. Advisory until promotion criteria in AGENTS.md.
+    command: ".venv/bin/ty check --python .venv/bin/python src"
+    blocking: false
+    tiers: [fast, full]
+
+  - name: tests
+    command: ".venv/bin/python -m pytest -q"
+    blocking: true
+    tiers: [full]
+
+  - name: metrics
+    command: ".venv/bin/python scripts/metrics_report.py --check"
+    blocking: true
+    tiers: [full]
+
+  - name: skill-audit
+    command: ".venv/bin/python skills/astral/scripts/audit_skill.py"
+    blocking: true
+    tiers: [fast, full]
